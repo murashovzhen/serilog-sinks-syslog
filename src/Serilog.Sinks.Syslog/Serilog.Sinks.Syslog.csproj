@@ -10,7 +10,7 @@
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <AssemblyName>Serilog.Sinks.Syslog</AssemblyName>
     <RootNamespace>Serilog</RootNamespace>
-    <PackageId>Serilog.Sinks.SyslogMessages.Netstandard1.6</PackageId>
+    <PackageId>Serilog.Sinks.SyslogMessages.Netstandard_1_6</PackageId>
     <PackageTags>serilog;syslog;logging</PackageTags>
     <PackageIconUrl>http://serilog.net/images/serilog-sink-nuget.png</PackageIconUrl>
     <PackageProjectUrl>https://github.com/murashovzhen/serilog-sinks-syslog</PackageProjectUrl>
