@@ -19,17 +19,17 @@ namespace Serilog.Sinks.Syslog
     /// </summary>
     public class SyslogUdpSink : PeriodicBatchingSink
     {
-        private readonly ISyslogFormatter formatter;
-        private UdpClient client;
-        private readonly IPEndPoint endpoint;
-        private bool disposed;
+        private readonly ISyslogFormatter _formatter;
+        private UdpClient _client;
+        private readonly IPEndPoint _endpoint;
+        private bool _disposed;
 
         public SyslogUdpSink(IPEndPoint endpoint, ISyslogFormatter formatter, BatchConfig batchConfig)
             : base(batchConfig.BatchSizeLimit, batchConfig.Period, batchConfig.QueueSizeLimit)
         {
-            this.formatter = formatter;
-            this.endpoint = endpoint;
-            this.client = new UdpClient();
+            this._formatter = formatter;
+            this._endpoint = endpoint;
+            this._client = new UdpClient();
         }
 
         /// <summary>
@@ -40,12 +40,12 @@ namespace Serilog.Sinks.Syslog
         {
             foreach (var logEvent in events)
             {
-                var message = this.formatter.FormatMessage(logEvent);
+                var message = this._formatter.FormatMessage(logEvent);
                 var data = Encoding.UTF8.GetBytes(message);
 
                 try
                 {
-                    await this.client.SendAsync(data, data.Length, this.endpoint).ConfigureAwait(false);
+                    await this._client.SendAsync(data, data.Length, this._endpoint).ConfigureAwait(false);
                 }
                 catch (SocketException ex)
                 {
@@ -56,17 +56,17 @@ namespace Serilog.Sinks.Syslog
 
         protected override void Dispose(bool disposing)
         {
-            if (!this.disposed)
+            if (!this._disposed)
             {
                 // If disposing == true, we're being called from an inheriting class calling base.Dispose()
                 if (disposing)
                 {
-                    this.client.Close();
-                    this.client.Dispose();
-                    this.client = null;
+                    this._client.Dispose();
+                    this._client.Dispose();
+                    this._client = null;
                 }
 
-                this.disposed = true;
+                this._disposed = true;
             }
 
             base.Dispose(disposing);

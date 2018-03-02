@@ -10,6 +10,7 @@ using System.Net.Security;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
 using System.Security.Authentication;
+using System.Threading.Tasks;
 using Serilog.Configuration;
 using Serilog.Formatting.Display;
 using Serilog.Sinks.Syslog;
@@ -157,7 +158,9 @@ namespace Serilog
         {
             if (!IPAddress.TryParse(host, out var addr))
             {
-                addr = Dns.GetHostAddresses(host).First(x => x.AddressFamily == AddressFamily.InterNetwork);
+                var ips = Task.Run(async () => await Dns.GetHostAddressesAsync(host)).Result;
+
+                addr = ips.First(x => x.AddressFamily == AddressFamily.InterNetwork);
             }
 
             return new IPEndPoint(addr, port);

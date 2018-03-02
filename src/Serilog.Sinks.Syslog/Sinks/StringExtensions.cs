@@ -10,7 +10,7 @@ namespace Serilog.Sinks.Syslog
 {
     public static class StringExtensions
     {
-        private static readonly Regex printableAsciiRegex = new Regex("[^\\u0021-\\u007E]", RegexOptions.Compiled | RegexOptions.Singleline);
+        private static readonly Regex PrintableAsciiRegex = new Regex("[^\\u0021-\\u007E]", RegexOptions.Compiled | RegexOptions.Singleline);
 
         /// <summary>
         /// Truncates a string so that it is no longer than the specified number of characters.
@@ -42,7 +42,7 @@ namespace Serilog.Sinks.Syslog
             if (String.IsNullOrEmpty(source))
                 return source;
 
-            return printableAsciiRegex.Replace(source, String.Empty);
+            return PrintableAsciiRegex.Replace(source, String.Empty);
         }
 
         /// <summary>

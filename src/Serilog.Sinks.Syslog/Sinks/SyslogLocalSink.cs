@@ -14,17 +14,17 @@ namespace Serilog.Sinks.Syslog
     /// </summary>
     public class SyslogLocalSink : ILogEventSink, IDisposable
     {
-        private readonly ISyslogFormatter formatter;
-        private readonly LocalSyslogService syslogService;
-        private static readonly object sync = new object();
-        private bool disposed;
+        private readonly ISyslogFormatter _formatter;
+        private readonly LocalSyslogService _syslogService;
+        private static readonly object Sync = new object();
+        private bool _disposed;
 
         public SyslogLocalSink(ISyslogFormatter formatter, LocalSyslogService syslogService)
         {
-            this.formatter = formatter;
-            this.syslogService = syslogService;
+            this._formatter = formatter;
+            this._syslogService = syslogService;
 
-            this.syslogService.Open();
+            this._syslogService.Open();
         }
 
         /// <summary>
@@ -36,14 +36,14 @@ namespace Serilog.Sinks.Syslog
             if (logEvent == null)
                 throw new ArgumentNullException(nameof(logEvent));
 
-            lock (sync)
+            lock (Sync)
             {
-                if (this.disposed)
+                if (this._disposed)
                     throw new ObjectDisposedException("The local syslog socket has been closed");
 
-                var priority = this.formatter.CalculatePriority(logEvent.Level);
-                var message = this.formatter.FormatMessage(logEvent);
-                this.syslogService.WriteLog(priority, message);
+                var priority = this._formatter.CalculatePriority(logEvent.Level);
+                var message = this._formatter.FormatMessage(logEvent);
+                this._syslogService.WriteLog(priority, message);
             }
         }
 
@@ -58,13 +58,13 @@ namespace Serilog.Sinks.Syslog
             if (!disposing)
                 return;
 
-            lock (sync)
+            lock (Sync)
             {
-                if (this.disposed)
+                if (this._disposed)
                     return;
 
-                this.syslogService.Close();
-                this.disposed = true;
+                this._syslogService.Close();
+                this._disposed = true;
             }
         }
     }

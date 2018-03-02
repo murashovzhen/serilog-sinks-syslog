@@ -66,7 +66,9 @@ namespace Serilog.Sinks.Syslog
             {
                 if (!IPAddress.TryParse(config.Host, out var addr))
                 {
-                    addr = Dns.GetHostAddresses(config.Host).First(x => x.AddressFamily == AddressFamily.InterNetwork);
+                    var ips= Task.Run(async () => await Dns.GetHostAddressesAsync(config.Host)).Result;
+                   
+                    addr = ips.First(x => x.AddressFamily == AddressFamily.InterNetwork);
                     this.Host = addr.ToString();
                 }
             }
@@ -107,7 +109,7 @@ namespace Serilog.Sinks.Syslog
 
                 // Recreate the TCP client
                 this.stream?.Dispose();
-                this.client?.Close();
+                this.client?.Dispose();
                 this.client = new TcpClient();
 
                 // If we're running on Linux, only try to set keep-alives if they are wanted (in
@@ -207,7 +209,7 @@ namespace Serilog.Sinks.Syslog
 
             // Tear down the client
             this.stream?.Dispose();
-            this.client?.Close();
+            this.client?.Dispose();
         }
 
         protected override void Dispose(bool disposing)
@@ -219,7 +221,7 @@ namespace Serilog.Sinks.Syslog
                 {
                     this.stream?.Dispose();
                     this.stream = null;
-                    this.client?.Close();
+                    this.client?.Dispose();
                     this.client = null;
                 }
 

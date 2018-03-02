@@ -57,7 +57,7 @@ namespace Serilog.Sinks.Syslog
         /// </summary>
         public virtual void Open()
         {
-            var appIdentity = AppDomain.CurrentDomain.FriendlyName;
+            var appIdentity =  AppDomain.CurrentDomain.FriendlyName;
             this.appIdentityHandle = Marshal.StringToHGlobalAnsi(appIdentity);
 
             openlog(this.appIdentityHandle, SyslogOptions.LOG_PID, this.facility);
