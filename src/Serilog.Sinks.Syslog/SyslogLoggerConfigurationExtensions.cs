@@ -27,17 +27,20 @@ namespace Serilog
         /// Adds a sink that writes log events to the local syslog service on a Linux system
         /// </summary>
         /// <param name="loggerSinkConfig">The logger configuration</param>
+        /// <param name="appName">The name of the application. Defaults to the current process name</param>
+        /// <param name="format">The syslog message format to be used</param>
         /// <param name="facility">The category of the application</param>
         /// <param name="outputTemplate">A message template describing the output messages
         /// <seealso cref="https://github.com/serilog/serilog/wiki/Formatting-Output"/>
         /// </param>
         public static LoggerConfiguration LocalSyslog(this LoggerSinkConfiguration loggerSinkConfig,
+            string appName = null, SyslogFormat format = SyslogFormat.RFC5424,
             Facility facility = Facility.Local0, string outputTemplate = null)
         {
             if (!RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
                 throw new ArgumentException("The local syslog sink is only supported on Linux systems");
 
-            var formatter = GetFormatter(SyslogFormat.Local, null, facility, outputTemplate);
+            var formatter = GetFormatter(format, appName, facility, outputTemplate);
             var syslogService = new LocalSyslogService(facility);
             syslogService.Open();
 
@@ -147,8 +150,6 @@ namespace Serilog
                     return new Rfc3164Formatter(facility, appName, templateFormatter);
                 case SyslogFormat.RFC5424:
                     return new Rfc5424Formatter(facility, appName, templateFormatter);
-                case SyslogFormat.Local:
-                    return new LocalFormatter(facility, templateFormatter);
                 default:
                     throw new ArgumentException($"Invalid format: {format}");
             }
