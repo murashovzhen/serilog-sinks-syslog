@@ -47,7 +47,7 @@ namespace Serilog.Sinks.Syslog
             this.applicationName = applicationName ?? ProcessName;
 
             // Conform to the RFC
-            this.applicationName = applicationName
+            this.applicationName = this.applicationName
                 .AsPrintableAscii()
                 .WithMaxLength(48);
         }
