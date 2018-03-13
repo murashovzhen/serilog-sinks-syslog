@@ -4,6 +4,7 @@
 // http://www.apache.org/licenses/LICENSE-2.0
 
 using FakeItEasy;
+using Serilog.Formatting.Display;
 using Xunit;
 using static Serilog.Sinks.Syslog.Tests.Fixture;
 
@@ -18,7 +19,7 @@ namespace Serilog.Sinks.Syslog.Tests
         [Fact]
         public void Should_send_logs_to_syslog_service()
         {
-            var syslogFormatter = new Rfc3164Formatter(Facility.Local0, "TestApp");
+            var syslogFormatter = new Rfc3164Formatter(Facility.Local0, "TestApp", new MessageTemplateTextFormatter("{Message}", null));
             var syslogService = A.Fake<LocalSyslogService>();
             var sink = new SyslogLocalSink(syslogFormatter, syslogService);
 

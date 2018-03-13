@@ -13,6 +13,7 @@ using System.Threading.Tasks;
 using Serilog.Context;
 using Serilog.Debugging;
 using Serilog.Formatting.Display;
+using Serilog.Sinks.Settings;
 
 namespace Serilog.Sinks.Syslog.Sample
 {
@@ -28,13 +29,12 @@ namespace Serilog.Sinks.Syslog.Sample
 
             // Use custom message template formatters, just so we can distinguish which sink wrote each message
             var tcpTemplateFormatter = new MessageTemplateTextFormatter("TCP: {Message}", null);
-            var udpOutputTemplate = "UDP: {Message}";
-            var localOutputTemplate = "Local: {Message}";
+          
 
             // The LocalSyslog sink is only supported on Linux
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             {
-                logConfig.WriteTo.LocalSyslog(outputTemplate: localOutputTemplate);
+                logConfig.WriteTo.LocalSyslog(messageFormat: MessageFormat.PlainText);
             }
 
             var certFilename = Path.Combine(baseDir, "client.p12");
@@ -57,7 +57,7 @@ namespace Serilog.Sinks.Syslog.Sample
             };
 
             var log = logConfig
-                .WriteTo.UdpSyslog("192.168.0.175", 514, outputTemplate: udpOutputTemplate)
+                .WriteTo.UdpSyslog("192.168.0.175", 514, messageFormat: MessageFormat.PlainText)
                 .WriteTo.TcpSyslog(tcpConfig)
                 .Enrich.FromLogContext()
                 .CreateLogger();

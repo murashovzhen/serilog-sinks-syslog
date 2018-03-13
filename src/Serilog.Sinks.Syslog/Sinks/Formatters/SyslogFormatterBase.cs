@@ -57,6 +57,11 @@ namespace Serilog.Sinks.Syslog
 
         protected string RenderMessage(LogEvent logEvent)
         {
+            if (templateFormatter == null)
+            {
+                return logEvent.RenderMessage();
+            }
+
             using (var sw = new StringWriter())
             {
                 if (templateFormatter is JsonFormatter)
