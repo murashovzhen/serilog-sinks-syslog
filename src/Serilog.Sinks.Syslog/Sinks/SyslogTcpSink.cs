@@ -29,7 +29,7 @@ namespace Serilog.Sinks.Syslog
         private TcpClient client;
         private Stream stream;
         private readonly ISyslogFormatter formatter;
-        private readonly MessageFramer framer;
+       private readonly MessageFramer framer;
         private readonly bool enableKeepAlive;
         private readonly bool useTls;
         private readonly SslProtocols secureProtocols;
@@ -150,7 +150,7 @@ namespace Serilog.Sinks.Syslog
             // Note: this method takes an X509CertificateCollection, rather than an X509Certificate,
             // but providing the full chain does not actually appear to work for many servers
             await sslStream.AuthenticateAsClientAsync(this.Host, this.clientCert,
-                this.secureProtocols, false).ConfigureAwait(false);
+                this.secureProtocols, false);
 
             if (!sslStream.IsAuthenticated)
                 throw new AuthenticationException("Unable to authenticate secure syslog server");

@@ -7,7 +7,9 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using Serilog.Events;
+using Serilog.Formatting;
 using Serilog.Formatting.Display;
+using Serilog.Formatting.Json;
 
 namespace Serilog.Sinks.Syslog
 {
@@ -21,12 +23,12 @@ namespace Serilog.Sinks.Syslog
     public abstract class SyslogFormatterBase : ISyslogFormatter
     {
         private readonly Facility facility;
-        private readonly MessageTemplateTextFormatter templateFormatter;
+        private readonly ITextFormatter templateFormatter;
         protected static readonly string Host = Environment.MachineName.WithMaxLength(255);
         protected static readonly string ProcessId = Process.GetCurrentProcess().Id.ToString();
         protected static readonly string ProcessName = Process.GetCurrentProcess().ProcessName;
 
-        protected SyslogFormatterBase(Facility facility, MessageTemplateTextFormatter templateFormatter)
+        protected SyslogFormatterBase(Facility facility, ITextFormatter templateFormatter)
         {
             this.facility = facility;
             this.templateFormatter = templateFormatter;
@@ -55,18 +57,18 @@ namespace Serilog.Sinks.Syslog
 
         protected string RenderMessage(LogEvent logEvent)
         {
-            if (this.templateFormatter != null)
+            using (var sw = new StringWriter())
             {
-                using (var sw = new StringWriter())
+                if (templateFormatter is JsonFormatter)
                 {
-                    this.templateFormatter.Format(logEvent, sw);
-                    return sw.ToString();
+                    sw.Write("@cee:");
                 }
+                this.templateFormatter.Format(logEvent, sw);
+              
+                return sw.ToString();
             }
-            else
-            {
-                return logEvent.RenderMessage();
-            }
+
+           
         }
     }
 }

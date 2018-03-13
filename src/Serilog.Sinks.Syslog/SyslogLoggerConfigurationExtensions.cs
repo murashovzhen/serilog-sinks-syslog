@@ -4,15 +4,20 @@
 // http://www.apache.org/licenses/LICENSE-2.0
 
 using System;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Security;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
 using System.Security.Authentication;
+using System.Threading;
 using System.Threading.Tasks;
 using Serilog.Configuration;
+using Serilog.Formatting;
 using Serilog.Formatting.Display;
+using Serilog.Formatting.Json;
+using Serilog.Sinks.Settings;
 using Serilog.Sinks.Syslog;
 
 namespace Serilog
@@ -27,20 +32,17 @@ namespace Serilog
         /// Adds a sink that writes log events to the local syslog service on a Linux system
         /// </summary>
         /// <param name="loggerSinkConfig">The logger configuration</param>
-        /// <param name="appName">The name of the application. Defaults to the current process name</param>
-        /// <param name="format">The syslog message format to be used</param>
         /// <param name="facility">The category of the application</param>
-        /// <param name="outputTemplate">A message template describing the output messages
+        /// <param name="messageFormat">A message template describing the output messages
         /// <seealso cref="https://github.com/serilog/serilog/wiki/Formatting-Output"/>
         /// </param>
         public static LoggerConfiguration LocalSyslog(this LoggerSinkConfiguration loggerSinkConfig,
-            string appName = null, SyslogFormat format = SyslogFormat.RFC5424,
-            Facility facility = Facility.Local0, string outputTemplate = null)
+            Facility facility = Facility.Local0, MessageFormat messageFormat = MessageFormat.JSON)
         {
             if (!RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
                 throw new ArgumentException("The local syslog sink is only supported on Linux systems");
 
-            var formatter = GetFormatter(format, appName, facility, outputTemplate);
+            var formatter = GetFormatter(SyslogFormat.Local, null, facility, messageFormat);
             var syslogService = new LocalSyslogService(facility);
             syslogService.Open();
 
@@ -58,17 +60,17 @@ namespace Serilog
         /// <param name="appName">The name of the application. Defaults to the current process name</param>
         /// <param name="format">The syslog message format to be used</param>
         /// <param name="facility">The category of the application</param>
-        /// <param name="outputTemplate">A message template describing the output messages
+        /// <param name="messageFormat">A message template describing the output messages
         /// <seealso cref="https://github.com/serilog/serilog/wiki/Formatting-Output"/>
         /// </param>
         public static LoggerConfiguration UdpSyslog(this LoggerSinkConfiguration loggerSinkConfig,
             string host, int port = 514, string appName = null, SyslogFormat format = SyslogFormat.RFC3164,
-            Facility facility = Facility.Local0, string outputTemplate = null)
+            Facility facility = Facility.Local0, MessageFormat messageFormat = MessageFormat.JSON)
         {
             if (String.IsNullOrWhiteSpace(host))
                 throw new ArgumentException(nameof(host));
 
-            var formatter = GetFormatter(format, appName, facility, outputTemplate);
+            var formatter = GetFormatter(format, appName, facility, messageFormat);
             var endpoint = ResolveIP(host, port);
 
             var sink = new SyslogUdpSink(endpoint, formatter, BatchConfig.Default);
@@ -111,17 +113,17 @@ namespace Serilog
         /// Optional callback used to validate the syslog server's certificate. If null, the system default
         /// will be used
         /// </param>
-        /// <param name="outputTemplate">A message template describing the output messages
+        /// <param name="messageFormat">A message template describing the output messages
         /// <seealso cref="https://github.com/serilog/serilog/wiki/Formatting-Output"/>
         /// </param>
         public static LoggerConfiguration TcpSyslog(this LoggerSinkConfiguration loggerSinkConfig,
             string host, int port = 1468, string appName = null, FramingType framingType = FramingType.OCTET_COUNTING,
             SyslogFormat format = SyslogFormat.RFC5424, Facility facility = Facility.Local0,
-            SslProtocols secureProtocols = SslProtocols.Tls12, ICertificateProvider certProvider = null,
+            SslProtocols secureProtocols = SslProtocols.None, ICertificateProvider certProvider = null,
             RemoteCertificateValidationCallback certValidationCallback = null,
-            string outputTemplate = null)
+            MessageFormat messageFormat = MessageFormat.JSON)
         {
-            var formatter = GetFormatter(format, appName, facility, outputTemplate);
+            var formatter = GetFormatter(format, appName, facility, messageFormat);
 
             var config = new SyslogTcpConfig
             {
@@ -138,11 +140,10 @@ namespace Serilog
         }
 
         private static ISyslogFormatter GetFormatter(SyslogFormat format, string appName, Facility facility,
-            string outputTemplate)
+            MessageFormat outputTemplate)
         {
-            var templateFormatter = String.IsNullOrWhiteSpace(outputTemplate)
-                ? null
-                : new MessageTemplateTextFormatter(outputTemplate, null);
+            var templateFormatter = outputTemplate == MessageFormat.PlainText? (ITextFormatter) new MessageTemplateTextFormatter("{Message}", null)
+                : (ITextFormatter)new CustomJsonFormatter(omitEnclosingObject:false, closingDelimiter:"", renderMessage: true);
 
             switch (format)
             {
@@ -150,6 +151,8 @@ namespace Serilog
                     return new Rfc3164Formatter(facility, appName, templateFormatter);
                 case SyslogFormat.RFC5424:
                     return new Rfc5424Formatter(facility, appName, templateFormatter);
+                case SyslogFormat.Local:
+                    return new LocalFormatter(facility, templateFormatter);
                 default:
                     throw new ArgumentException($"Invalid format: {format}");
             }
@@ -165,6 +168,29 @@ namespace Serilog
             }
 
             return new IPEndPoint(addr, port);
+        }
+
+        public class CustomJsonFormatter: JsonFormatter
+        {
+            public CustomJsonFormatter(bool omitEnclosingObject,
+                string closingDelimiter = null,
+                bool renderMessage = false,
+                IFormatProvider formatProvider = null)
+                : base(false, closingDelimiter, renderMessage, formatProvider)
+            {
+            }
+
+           
+          
+            protected override void WriteRenderedMessage(string message, ref string delim, TextWriter output)
+            {
+                WriteJsonProperty("Message", message, ref delim, output);
+            }
+
+            protected override void WriteMessageTemplate(string message, ref string delim, TextWriter output)
+            {
+               
+            }
         }
     }
 }
