@@ -19,7 +19,7 @@ using Serilog.Formatting.Display;
 using Serilog.Formatting.Json;
 using Serilog.Sinks.Settings;
 using Serilog.Sinks.Syslog;
-
+ 
 namespace Serilog
 {
     /// <summary>
