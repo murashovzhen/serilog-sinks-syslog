@@ -36,14 +36,14 @@ namespace Serilog
         /// <param name="messageFormat">A message template describing the output messages
         /// <seealso cref="https://github.com/serilog/serilog/wiki/Formatting-Output"/>
         /// </param>
-        public static LoggerConfiguration LocalSyslog(this LoggerSinkConfiguration loggerSinkConfig,
-            Facility facility = Facility.Local0, MessageFormat messageFormat = MessageFormat.JSON)
+          public static LoggerConfiguration LocalSyslog(this LoggerSinkConfiguration loggerSinkConfig,
+            Facility facility = Facility.Local0, MessageFormat messageFormat = MessageFormat.JSON, string appName = null)
         {
             if (!RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
                 throw new ArgumentException("The local syslog sink is only supported on Linux systems");
 
             var formatter = GetFormatter(SyslogFormat.Local, null, facility, messageFormat);
-            var syslogService = new LocalSyslogService(facility);
+            var syslogService = new LocalSyslogService(facility, appName);
             syslogService.Open();
 
             var sink = new SyslogLocalSink(formatter, syslogService);
