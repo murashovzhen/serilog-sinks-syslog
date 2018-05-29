@@ -47,8 +47,16 @@ namespace Serilog.Sinks.Syslog
         private IntPtr appIdentityHandle = IntPtr.Zero;
         private readonly Facility facility;
 
-        public LocalSyslogService(Facility facility)
+        public LocalSyslogService(Facility facility, string appName)
         {
+            var appIdentity = appName;
+            if (string.IsNullOrEmpty(appIdentity))
+            {
+                appIdentity = AppDomain.CurrentDomain.FriendlyName;
+
+            }
+            this.appIdentityHandle = Marshal.StringToHGlobalAnsi(appIdentity);
+
             this.facility = facility;
         }
 
@@ -57,9 +65,7 @@ namespace Serilog.Sinks.Syslog
         /// </summary>
         public virtual void Open()
         {
-            var appIdentity =  AppDomain.CurrentDomain.FriendlyName;
-            this.appIdentityHandle = Marshal.StringToHGlobalAnsi(appIdentity);
-
+           
             openlog(this.appIdentityHandle, SyslogOptions.LOG_PID, this.facility);
         }
 
